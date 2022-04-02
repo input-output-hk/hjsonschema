@@ -12,6 +12,8 @@ import           Protolude
 import           Data.Aeson (FromJSON(..), Value(..), decodeStrict)
 import qualified Data.Aeson as AE
 import qualified Data.HashMap.Strict as HM
+import qualified HaskellWorks.Data.Aeson.Compat as J
+import qualified HaskellWorks.Data.Aeson.Compat.Map as JM
 import           Data.Maybe (fromMaybe)
 import           Data.Profunctor (Profunctor(..))
 
@@ -38,9 +40,9 @@ draft4FetchInfo = FE.FetchInfo embedded (lookup "id") (lookup "$ref")
   where
     lookup :: Text -> Schema -> Maybe Text
     lookup k (Schema s) =
-        case HM.lookup k s of
-            Just (String t) -> Just t
-            _               -> Nothing
+        case JM.lookup (J.textToKey k) s of
+            Just (String t)  -> Just t
+            _       -> Nothing
 
 -- | An implementation of 'JT.embedded'.
 embedded :: Schema -> ([Schema], [Schema])

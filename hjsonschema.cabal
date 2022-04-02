@@ -1,3 +1,5 @@
+cabal-version:      2.4
+
 name:               hjsonschema
 version:            1.10.0
 synopsis:           JSON Schema library
@@ -8,9 +10,8 @@ author:             Ian Grant Jeffries
 maintainer:         ian@housejeffries.com
 category:           Data
 build-type:         Simple
-cabal-version:      >=1.10
 -- Rerun multi-ghc-travis (executable make-travis-yml-2) after changing:
-Tested-With:        GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.1
+Tested-With:        GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.1, GHC == 8.6.5, GHC == 8.10.7
 extra-source-files:
   changelog.md
   JSON-Schema-Test-Suite/remotes/*.json
@@ -71,6 +72,7 @@ library
     , http-client          >= 0.4.30
     , http-client-tls      >= 0.3
     , http-types           >= 0.8
+    , hw-aeson             >= 0.1.4
     , pcre-heavy           >= 1.0
     , profunctors          >= 5.0
     , protolude            >= 0.1.10
@@ -100,6 +102,7 @@ test-suite spec
       JSONSchema.Validator.Draft4.String
 
       JSONSchema.Validator.Draft4.StringSpec
+  build-tool-depends: hspec-discover:hspec-discover
   build-depends:
       base                 >= 4.7 && < 5
     -- 0.11 is for `.:!`:
@@ -157,6 +160,7 @@ test-suite local
     , filepath
     , hjsonpointer
     , hjsonschema
+    , hw-aeson
     , profunctors
     , protolude
     , text
@@ -195,6 +199,7 @@ test-suite remote
     , filepath
     , hjsonpointer
     , hjsonschema
+    , hw-aeson
     , profunctors
     , protolude
     , text

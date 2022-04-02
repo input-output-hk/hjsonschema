@@ -8,6 +8,7 @@ import           Data.Aeson.TH (fieldLabelModifier)
 import qualified Data.ByteString as BS
 import           Data.Char (toLower)
 import           Data.List (stripPrefix, unlines)
+import qualified Data.List as L
 import qualified Data.Text as T
 import qualified System.Directory as SD
 import           System.FilePath ((</>))
@@ -117,7 +118,7 @@ assertResult sc failures
 assertValid :: (HasCallStack, Show err) => SchemaTestCase -> [err] -> Expectation
 assertValid _ [] = pure ()
 assertValid sc failures =
-    expectationFailure $ unlines
+    expectationFailure $ L.unlines
         [ "    Failed to validate data"
         , "    Description: "         <> T.unpack (_scDescription sc)
         , "    Data: "                <> show (_scData sc)
@@ -126,7 +127,7 @@ assertValid sc failures =
 
 assertInvalid :: HasCallStack => SchemaTestCase -> [err] -> Expectation
 assertInvalid sc [] =
-    expectationFailure $ unlines
+    expectationFailure $ L.unlines
         [ "    Validated invalid data"
         , "    Description: " <> T.unpack (_scDescription sc)
         , "    Data: "        <> show (_scData sc)

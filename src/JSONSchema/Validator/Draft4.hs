@@ -9,8 +9,8 @@ module JSONSchema.Validator.Draft4
 
 import           Import
 
-import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as NE
+import qualified HaskellWorks.Data.Aeson.Compat.Map as JM
 
 import           JSONSchema.Validator.Draft4.Any as Export
 import           JSONSchema.Validator.Draft4.Array as Export
@@ -126,7 +126,7 @@ dependenciesValidator f =
     Validator
         (maybe mempty ( (\a -> (mempty, a))
                       . catMaybes . fmap checkDependency
-                      . HM.elems . _unDependenciesValidator
+                      . JM.elems . _unDependenciesValidator
                       ))
         (run (dependenciesVal f))
   where
@@ -143,8 +143,8 @@ propertiesRelatedValidator
 propertiesRelatedValidator f =
     Validator
         (\a -> ( mempty
-               ,  HM.elems (fromMaybe mempty (_propProperties a))
-               <> HM.elems (fromMaybe mempty (_propPattern a))
+               ,  JM.elems (fromMaybe mempty (_propProperties a))
+               <> JM.elems (fromMaybe mempty (_propPattern a))
                <> case _propAdditional a of
                       Just (AdditionalPropertiesObject b) -> [b]
                       _                                   -> mempty
@@ -154,7 +154,7 @@ propertiesRelatedValidator f =
                      Right c -> maybeToList (propertiesRelatedVal f a c))
 
 newtype Definitions schema
-    = Definitions { _unDefinitions :: HashMap Text schema }
+    = Definitions { _unDefinitions :: JM.KeyMap schema }
     deriving (Eq, Show)
 
 instance FromJSON schema => FromJSON (Definitions schema) where
@@ -169,7 +169,7 @@ definitionsEmbedded
 definitionsEmbedded =
     Validator
         (\a -> case a of
-                 Just (Definitions b) -> (mempty, HM.elems b)
+                 Just (Definitions b) -> (mempty, JM.elems b)
                  Nothing              -> (mempty, mempty))
         (const (const mempty))
 

@@ -4,7 +4,8 @@ import           Import hiding ((<>))
 
 import           Data.Aeson.TH (constructorTagModifier)
 import           Data.Char (toLower)
-import qualified Data.HashMap.Strict as HM
+import qualified HaskellWorks.Data.Aeson.Compat as J
+import qualified HaskellWorks.Data.Aeson.Compat.Map as JM
 import           Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Scientific as SCI
@@ -184,14 +185,14 @@ newBaseURIFromFragment
 newBaseURIFromFragment updateScope baseURI v =
   case v of
     Object hm -> do
-      let hmWithOnlyId = case HM.lookup idKey hm of
+      let hmWithOnlyId = case JM.lookup idKey hm of
                            Nothing    -> mempty
-                           Just idVal -> HM.singleton idKey idVal
+                           Just idVal -> JM.singleton idKey idVal
       schema <- first SubschemaDecodingError (fromJSONEither (Object hmWithOnlyId))
       Right (updateScope baseURI schema)
     _ -> Right baseURI
   where
-    idKey :: Text
+    idKey :: J.Key
     idKey = "id"
 
 --------------------------------------------------

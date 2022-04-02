@@ -2,7 +2,7 @@ module JSONSchema.Draft4.Schema where
 
 import           Import hiding (mapMaybe)
 
-import qualified Data.HashMap.Strict as HM
+import qualified HaskellWorks.Data.Aeson.Compat.Map as JM
 import           Data.List.NonEmpty (NonEmpty)
 import           Data.Maybe (fromJust, isJust)
 import           Data.Scientific
@@ -16,10 +16,10 @@ data Schema = Schema
     { _schemaVersion              :: Maybe Text
     , _schemaId                   :: Maybe Text
     , _schemaRef                  :: Maybe Text
-    , _schemaDefinitions          :: Maybe (HashMap Text Schema)
+    , _schemaDefinitions          :: Maybe (JM.KeyMap Schema)
     -- ^ A standardized location for embedding schemas
     -- to be referenced from elsewhere in the document.
-    , _schemaOther                :: HashMap Text Value
+    , _schemaOther                :: JM.KeyMap Value
     -- ^ Since the JSON document this schema was built from could
     -- contain schemas anywhere (not just in "definitions" or any
     -- of the other official keys) we save any leftover key/value
@@ -51,9 +51,9 @@ data Schema = Schema
     , _schemaMaxProperties        :: Maybe Int
     , _schemaMinProperties        :: Maybe Int
     , _schemaRequired             :: Maybe (Set Text)
-    , _schemaDependencies         :: Maybe (HashMap Text (D4.Dependency Schema))
-    , _schemaProperties           :: Maybe (HashMap Text Schema)
-    , _schemaPatternProperties    :: Maybe (HashMap Text Schema)
+    , _schemaDependencies         :: Maybe (JM.KeyMap (D4.Dependency Schema))
+    , _schemaProperties           :: Maybe (JM.KeyMap Schema)
+    , _schemaPatternProperties    :: Maybe (JM.KeyMap Schema)
     , _schemaAdditionalProperties :: Maybe (D4.AdditionalProperties Schema)
 
     , _schemaEnum                 :: Maybe (NonEmpty Value)
@@ -110,7 +110,7 @@ instance FromJSON Schema where
         b  <- o .:! "id"
         c  <- o .:! "$ref"
         d  <- o .:! "definitions"
-        e  <- parseJSON (Object (HM.difference o internalSchemaHashMap))
+        e  <- parseJSON (Object (JM.difference o internalSchemaHashMap))
 
         f  <- o .:! "multipleOf"
         g  <- o .:! "maximum"
@@ -193,21 +193,21 @@ instance ToJSON Schema where
     -- of Bool for "exclusiveMaximum". This would have made writing schemas
     -- in haskell easier, but we could no longer round trip through/from
     -- JSON without losing information.
-    toJSON s = Object $ HM.union (mapMaybe ($ s) internalSchemaHashMap)
+    toJSON s = Object $ JM.union (mapMaybe ($ s) internalSchemaHashMap)
                                  (toJSON <$> _schemaOther s)
       where
         -- 'mapMaybe' is provided by unordered-containers after
         -- unordered-container-2.6.0.0, but until that is a little older
         -- (and has time to get into Stackage etc.) we use our own
         -- implementation.
-        mapMaybe :: (v1 -> Maybe v2) -> HashMap k v1 -> HashMap k v2
-        mapMaybe f = fmap fromJust . HM.filter isJust . fmap f
+        mapMaybe :: (v1 -> Maybe v2) -> JM.KeyMap v1 -> JM.KeyMap v2
+        mapMaybe f = fmap fromJust . JM.filter isJust . fmap f
 
 -- | Internal. Separate from ToJSON because it's also used
 -- by FromJSON to determine what keys aren't official schema
 -- keys and therefor should be included in _schemaOther.
-internalSchemaHashMap :: HashMap Text (Schema -> Maybe Value)
-internalSchemaHashMap = HM.fromList
+internalSchemaHashMap :: JM.KeyMap (Schema -> Maybe Value)
+internalSchemaHashMap = JM.fromList
     [ ("$schema"             , f _schemaVersion)
     , ("id"                  , f _schemaId)
     , ("$ref"                , f _schemaRef)
