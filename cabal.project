@@ -3,9 +3,4 @@ packages: .
 source-repository-package
     type: git
     location: https://github.com/input-output-hk/hjsonpointer
-    tag: 52313b2b62533960c3762a49038261a32624246d
-
-source-repository-package
-    type: git
-    location: https://github.com/haskell-works/hw-aeson
-    tag: 78b3d300fe1855a469a646df1cd1482a0527a644
+    tag: bb99294424e0c5b3c2942c743b545e4b01c12ce8

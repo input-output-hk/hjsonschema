@@ -72,7 +72,7 @@ library
     , http-client          >= 0.4.30
     , http-client-tls      >= 0.3
     , http-types           >= 0.8
-    , hw-aeson             >= 0.1.4
+    , hw-aeson             
     , pcre-heavy           >= 1.0
     , profunctors          >= 5.0
     , protolude            >= 0.1.10
@@ -160,7 +160,7 @@ test-suite local
     , filepath
     , hjsonpointer
     , hjsonschema
-    , hw-aeson
+    , hw-aeson             >= 0.1.5
     , profunctors
     , protolude
     , text
@@ -199,7 +199,7 @@ test-suite remote
     , filepath
     , hjsonpointer
     , hjsonschema
-    , hw-aeson
+    , hw-aeson             
     , profunctors
     , protolude
     , text
