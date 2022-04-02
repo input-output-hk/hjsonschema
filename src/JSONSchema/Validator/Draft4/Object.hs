@@ -5,7 +5,8 @@ module JSONSchema.Validator.Draft4.Object
 
 import           Import
 
-import qualified Data.HashMap.Strict as HM
+import qualified HaskellWorks.Data.Aeson.Compat as J
+import qualified HaskellWorks.Data.Aeson.Compat.Map as JM
 import qualified Data.List.NonEmpty as NE
 import           Data.Set (Set)
 import qualified Data.Set as Set
@@ -27,17 +28,17 @@ instance FromJSON MaxProperties where
         MaxProperties <$> o .: "maxProperties"
 
 data MaxPropertiesInvalid
-    = MaxPropertiesInvalid MaxProperties (HashMap Text Value)
+    = MaxPropertiesInvalid MaxProperties (JM.KeyMap Value)
     deriving (Eq, Show)
 
 -- | The spec requires @"maxProperties"@ to be non-negative.
 maxPropertiesVal
     :: MaxProperties
-    -> HashMap Text Value
+    -> JM.KeyMap Value
     -> Maybe MaxPropertiesInvalid
 maxPropertiesVal a@(MaxProperties n) x
     | n < 0         = Nothing
-    | HM.size x > n = Just (MaxPropertiesInvalid a x)
+    | JM.size x > n = Just (MaxPropertiesInvalid a x)
     | otherwise     = Nothing
 
 --------------------------------------------------
@@ -53,17 +54,17 @@ instance FromJSON MinProperties where
         MinProperties <$> o .: "minProperties"
 
 data MinPropertiesInvalid
-    = MinPropertiesInvalid MinProperties (HashMap Text Value)
+    = MinPropertiesInvalid MinProperties (JM.KeyMap Value)
     deriving (Eq, Show)
 
 -- | The spec requires @"minProperties"@ to be non-negative.
 minPropertiesVal
     :: MinProperties
-    -> HashMap Text Value
+    -> JM.KeyMap Value
     -> Maybe MinPropertiesInvalid
 minPropertiesVal a@(MinProperties n) x
     | n < 0         = Nothing
-    | HM.size x < n = Just (MinPropertiesInvalid a x)
+    | JM.size x < n = Just (MinPropertiesInvalid a x)
     | otherwise     = Nothing
 
 --------------------------------------------------
@@ -90,10 +91,10 @@ instance Arbitrary Required where
         pure . Required . Set.fromList $ x:xs
 
 data RequiredInvalid
-    = RequiredInvalid Required (Set Text) (HashMap Text Value)
+    = RequiredInvalid Required (Set Text) (JM.KeyMap Value)
     deriving (Eq, Show)
 
-requiredVal :: Required -> HashMap Text Value -> Maybe RequiredInvalid
+requiredVal :: Required -> JM.KeyMap Value -> Maybe RequiredInvalid
 requiredVal r@(Required ts) x
     | Set.null ts        = Nothing
     | Set.null leftovers = Nothing
@@ -103,7 +104,7 @@ requiredVal r@(Required ts) x
     leftovers =
         Set.difference -- Items of the first set not in the second.
             ts
-            (Set.fromList (HM.keys x))
+            (Set.fromList (J.keyToText <$> JM.keys x))
 
 --------------------------------------------------
 -- * dependencies
@@ -111,7 +112,7 @@ requiredVal r@(Required ts) x
 
 newtype DependenciesValidator schema
     = DependenciesValidator
-        { _unDependenciesValidator :: HashMap Text (Dependency schema) }
+        { _unDependenciesValidator :: JM.KeyMap (Dependency schema) }
     deriving (Eq, Show)
 
 instance FromJSON schema => FromJSON (DependenciesValidator schema) where
@@ -138,11 +139,11 @@ instance Arbitrary schema => Arbitrary (Dependency schema) where
 
 data DependencyMemberInvalid err
     = SchemaDepInvalid   (NonEmpty err)
-    | PropertyDepInvalid (Set Text) (HashMap Text Value)
+    | PropertyDepInvalid (Set Text) (JM.KeyMap Value)
     deriving (Eq, Show)
 
 newtype DependenciesInvalid err
-    = DependenciesInvalid (HashMap Text (DependencyMemberInvalid err))
+    = DependenciesInvalid (JM.KeyMap (DependencyMemberInvalid err))
     deriving (Eq, Show)
 
 -- | From the spec:
@@ -161,22 +162,22 @@ dependenciesVal
     :: forall err schema.
        (schema -> Value -> [err])
     -> DependenciesValidator schema
-    -> HashMap Text Value
+    -> JM.KeyMap Value
     -> Maybe (DependenciesInvalid err)
 dependenciesVal f (DependenciesValidator hm) x =
-    let res = HM.mapMaybeWithKey g hm
-    in if HM.null res
+    let res = JM.mapMaybeWithKey g hm
+    in if JM.null res
         then Nothing
         else Just (DependenciesInvalid res)
     where
-      g :: Text -> Dependency schema -> Maybe (DependencyMemberInvalid err)
+      g :: J.Key -> Dependency schema -> Maybe (DependencyMemberInvalid err)
       g k (SchemaDependency schema)
-          | HM.member k x = SchemaDepInvalid
+          | JM.member k x = SchemaDepInvalid
                         <$> NE.nonEmpty (f schema (Object x))
           | otherwise = Nothing
       g k (PropertyDependency ts)
-          | HM.member k x && not allPresent = Just (PropertyDepInvalid ts x)
+          | JM.member k x && not allPresent = Just (PropertyDepInvalid ts x)
           | otherwise                       = Nothing
         where
           allPresent :: Bool
-          allPresent = all (`HM.member` x) ts
+          allPresent = all (`JM.member` x) (Set.map J.textToKey ts)

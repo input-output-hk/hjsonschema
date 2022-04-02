@@ -3,6 +3,7 @@ module JSONSchema.Types where
 import           Import
 
 import           JSONSchema.Validator.Types (Validator(..))
+import qualified HaskellWorks.Data.Aeson.Compat.Map as JM
 
 newtype Spec schema err
     = Spec { _unSpec :: [Validator schema schema err] }
@@ -31,5 +32,5 @@ validate spec schema v =
 -- one defined in 'JSONSchema.Draft4.Schema' to make it easier to write
 -- draft 4 schemas in Haskell.
 newtype Schema
-    = Schema { _unSchema :: HashMap Text Value }
+    = Schema { _unSchema :: JM.KeyMap Value }
     deriving (Eq, Show, FromJSON, ToJSON)

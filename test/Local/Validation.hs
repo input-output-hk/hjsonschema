@@ -4,7 +4,7 @@ import           Protolude
 
 import           Data.Aeson
 import qualified Data.Aeson as AE
-import qualified Data.HashMap.Strict as HM
+import qualified HaskellWorks.Data.Aeson.Compat.Map as JM
 import           Data.String (String)
 import           Test.Hspec
 
@@ -59,12 +59,12 @@ resolutionInvalid ref = do
 
 forbidNull :: Expectation
 forbidNull =
-    case fromJSON (Object (HM.singleton "type" Null)) of
+    case fromJSON (Object (JM.singleton "type" Null)) of
         AE.Error _   -> pure ()
         AE.Success a -> expectationFailure ("parsed to: " <> show (a :: Schema))
 
 exampleForbidNull :: Expectation
 exampleForbidNull =
-    case AS.checkSchema (JT.Schema (HM.singleton "type" Null)) of
+    case AS.checkSchema (JT.Schema (JM.singleton "type" Null)) of
         [] -> expectationFailure "No checkSchema failures"
         _  -> pure ()

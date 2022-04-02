@@ -7,6 +7,8 @@ import           Control.Monad (foldM)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.HashMap.Strict as HM
+import qualified HaskellWorks.Data.Aeson.Compat as J
+import qualified HaskellWorks.Data.Aeson.Compat.Map as JM
 import qualified Data.Semigroup as S
 import qualified Data.Text as T
 import qualified Network.HTTP.Client as NC
@@ -29,7 +31,7 @@ data FetchInfo schema = FetchInfo
 
 -- | Keys are URIs (without URI fragments).
 newtype URISchemaMap schema
-    = URISchemaMap { _unURISchemaMap :: HashMap Text schema }
+    = URISchemaMap { _unURISchemaMap :: HM.HashMap Text schema }
     deriving (Eq, Show, S.Semigroup, Monoid)
 
 -- | A top-level schema along with its location.
