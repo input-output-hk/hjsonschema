@@ -1,7 +1,7 @@
 cabal-version:      2.4
 
 name:               hjsonschema
-version:            1.10.0
+version:            1.10.0.0.0.0.0.1
 synopsis:           JSON Schema library
 homepage:           https://github.com/seagreen/hjsonschema
 license:            MIT
