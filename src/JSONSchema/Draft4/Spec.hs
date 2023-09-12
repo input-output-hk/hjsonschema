@@ -2,7 +2,6 @@ module JSONSchema.Draft4.Spec where
 
 import           Import
 
-import           Data.Maybe (fromMaybe)
 import           Data.Profunctor (Profunctor(..))
 
 import           JSONSchema.Draft4.Failure

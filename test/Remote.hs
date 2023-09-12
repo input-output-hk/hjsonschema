@@ -2,7 +2,6 @@ module Main where
 
 import           Protolude
 
-import           Control.Concurrent.Async (withAsync)
 import qualified Data.List.NonEmpty as NE
 import           Network.Wai.Application.Static (defaultFileServerSettings,
                                                  staticApp)

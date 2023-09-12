@@ -3,11 +3,11 @@ module JSONSchema.Validator.Utils where
 import           Import
 
 import           Control.Monad (fail)
-import qualified HaskellWorks.Data.Aeson.Compat.Map as JM
-import qualified HaskellWorks.Data.Aeson.Compat as J
+import           Data.Aeson.Key (fromString, fromText)
+import           Data.Aeson.KeyMap (KeyMap)
+import qualified Data.Aeson.KeyMap as KeyMap
 import qualified Data.List.NonEmpty as NE
 import           Data.Scientific (Scientific, fromFloatDigits)
-import           Data.Set (Set)
 import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Vector as V
@@ -39,7 +39,7 @@ instance Arbitrary ArbitraryValue where
             | otherwise = oneof $
                   fmap (Array . V.fromList) (traverse (const (f (n `div` 10)))
                     =<< (arbitrary :: Gen [()]))
-                : fmap (Object . JM.fromList . fmap (first J.textToKey)) (traverse (const (g (n `div` 10)))
+                : fmap (Object . KeyMap.fromList . fmap (first fromText)) (traverse (const (g (n `div` 10)))
                     =<< (arbitrary :: Gen [()]))
                 : nonRecursive
 
@@ -54,8 +54,8 @@ instance Arbitrary ArbitraryValue where
             , Number <$> arbitraryScientific
             ]
 
-arbitraryHashMap :: Arbitrary a => Gen (JM.KeyMap a)
-arbitraryHashMap = JM.fromList . fmap (first J.stringToKey) <$> arbitrary
+arbitraryHashMap :: Arbitrary a => Gen (KeyMap a)
+arbitraryHashMap = KeyMap.fromList . fmap (first fromString) <$> arbitrary
 
 arbitrarySetOfText :: Gen (Set Text)
 arbitrarySetOfText = S.fromList . fmap T.pack <$> arbitrary
@@ -117,4 +117,4 @@ instance Ord OrdValue where
     _                     `compare` (OrdValue (Array _))  = GT
 
     (OrdValue (Object x)) `compare` (OrdValue (Object y)) =
-        JM.toList (OrdValue <$> x) `compare` JM.toList (OrdValue <$> y)
+        toList (OrdValue <$> x) `compare` toList (OrdValue <$> y)

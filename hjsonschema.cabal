@@ -61,7 +61,7 @@ library
   build-depends:
       base                 >= 4.7 && < 5
     -- 0.11 is for `.:!`:
-    , aeson                >= 0.11
+    , aeson                >= 2.0
     , bytestring           >= 0.10
     , containers           >= 0.5
     , file-embed           >= 0.0.8
@@ -72,7 +72,6 @@ library
     , http-client          >= 0.4.30
     , http-client-tls      >= 0.3
     , http-types           >= 0.8
-    , hw-aeson             
     , pcre-heavy           >= 1.0
     , profunctors          >= 5.0
     , protolude            >= 0.1.10
@@ -160,7 +159,6 @@ test-suite local
     , filepath
     , hjsonpointer
     , hjsonschema
-    , hw-aeson             >= 0.1.5
     , profunctors
     , protolude
     , text
@@ -199,7 +197,7 @@ test-suite remote
     , filepath
     , hjsonpointer
     , hjsonschema
-    , hw-aeson             
+    , hw-aeson
     , profunctors
     , protolude
     , text

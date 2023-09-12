@@ -2,9 +2,10 @@ module Local.Validation where
 
 import           Protolude
 
-import           Data.Aeson
-import qualified Data.Aeson as AE
-import qualified HaskellWorks.Data.Aeson.Compat.Map as JM
+import           Data.Aeson (Value (..))
+import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.KeyMap as KeyMap
+
 import           Data.String (String)
 import           Test.Hspec
 
@@ -51,7 +52,7 @@ resolutionInvalid ref = do
         a               -> expectationFailure (msg <> show a)
   where
     badData :: Value
-    badData = toJSON [True, True]
+    badData = Aeson.toJSON [True, True]
 
     msg :: String
     msg = "expected fetchFilesystemAndValidate to return"
@@ -59,12 +60,12 @@ resolutionInvalid ref = do
 
 forbidNull :: Expectation
 forbidNull =
-    case fromJSON (Object (JM.singleton "type" Null)) of
-        AE.Error _   -> pure ()
-        AE.Success a -> expectationFailure ("parsed to: " <> show (a :: Schema))
+    case Aeson.fromJSON (Object (KeyMap.singleton "type" Null)) of
+        Aeson.Error _   -> pure ()
+        Aeson.Success a -> expectationFailure ("parsed to: " <> show (a :: Schema))
 
 exampleForbidNull :: Expectation
 exampleForbidNull =
-    case AS.checkSchema (JT.Schema (JM.singleton "type" Null)) of
+    case AS.checkSchema (JT.Schema (KeyMap.singleton "type" Null)) of
         [] -> expectationFailure "No checkSchema failures"
         _  -> pure ()

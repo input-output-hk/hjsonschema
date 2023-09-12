@@ -41,7 +41,6 @@ import qualified Data.ByteString as BS
 import           Data.FileEmbed (embedFile, makeRelativeToProject)
 import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as NE
-import           Data.Maybe (fromMaybe)
 
 import           JSONSchema.Draft4.Failure (Invalid(..), SchemaInvalid(..),
                                             ValidatorFailure(..))

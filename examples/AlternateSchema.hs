@@ -10,11 +10,10 @@ module AlternateSchema where
 import           Protolude
 
 import           Data.Aeson (FromJSON(..), Value(..), decodeStrict)
-import qualified Data.Aeson as AE
+import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.Key as Key
+import qualified Data.Aeson.KeyMap as KeyMap
 import qualified Data.HashMap.Strict as HM
-import qualified HaskellWorks.Data.Aeson.Compat as J
-import qualified HaskellWorks.Data.Aeson.Compat.Map as JM
-import           Data.Maybe (fromMaybe)
 import           Data.Profunctor (Profunctor(..))
 
 import           JSONSchema.Draft4 (ValidatorFailure(..), metaSchemaBytes)
@@ -40,7 +39,7 @@ draft4FetchInfo = FE.FetchInfo embedded (lookup "id") (lookup "$ref")
   where
     lookup :: Text -> Schema -> Maybe Text
     lookup k (Schema s) =
-        case JM.lookup (J.textToKey k) s of
+        case KeyMap.lookup (Key.fromText k) s of
             Just (String t)  -> Just t
             _       -> Nothing
 
@@ -173,9 +172,9 @@ d4Spec schemaMap visited scope =
   where
     f :: FromJSON a => Schema -> Maybe a
     f (Schema a) =
-        case AE.fromJSON (Object a) of
-            AE.Error _   -> Nothing
-            AE.Success b -> Just b
+        case Aeson.fromJSON (Object a) of
+            Aeson.Error _   -> Nothing
+            Aeson.Success b -> Just b
 
     disableIfRefPresent :: Schema -> Schema
     disableIfRefPresent schema =

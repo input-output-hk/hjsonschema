@@ -14,3 +14,6 @@ index-state:
   , cardano-haskell-packages 2023-09-11T07:27:44Z
 
 packages: .
+
+tests: True
+test-show-details: direct

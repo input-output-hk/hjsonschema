@@ -2,19 +2,20 @@ module JSONSchema.Validator.Draft4.Object.Properties where
 
 import           Import
 
+import           Data.Aeson.Key (toText)
+import           Data.Aeson.KeyMap (KeyMap)
+import qualified Data.Aeson.KeyMap as KeyMap
 import qualified Data.Hashable as HA
 import qualified Data.HashMap.Strict as HM
-import qualified HaskellWorks.Data.Aeson.Compat as J
-import qualified HaskellWorks.Data.Aeson.Compat.Map as JM
 import qualified Data.List.NonEmpty as NE
-import           Data.Text.Encoding (encodeUtf8)
+import qualified Data.Map.Strict as Map
 import qualified JSONPointer as JP
 import qualified Text.Regex.PCRE.Heavy as RE
 
 data PropertiesRelated schema = PropertiesRelated
-    { _propProperties :: Maybe (JM.KeyMap schema)
+    { _propProperties :: Maybe (KeyMap schema)
         -- ^ 'Maybe' is used to distinguish whether the key is present or not.
-    , _propPattern    :: Maybe (JM.KeyMap schema)
+    , _propPattern    :: Maybe (KeyMap schema)
     , _propAdditional :: Maybe (AdditionalProperties schema)
     } deriving (Eq, Show)
 
@@ -58,14 +59,14 @@ instance HA.Hashable Regex
 
 -- NOTE: We'd like to enforce that at least one error exists here.
 data PropertiesRelatedInvalid err = PropertiesRelatedInvalid
-    { _prInvalidProperties :: JM.KeyMap [err]
+    { _prInvalidProperties :: KeyMap [err]
     , _prInvalidPattern    :: HashMap (Regex, JP.Key) [err]
     , _prInvalidAdditional :: Maybe (APInvalid err)
     } deriving (Eq, Show)
 
 data APInvalid err
-    = APBoolInvalid   (JM.KeyMap Value)
-    | APObjectInvalid (JM.KeyMap (NonEmpty err))
+    = APBoolInvalid   (KeyMap Value)
+    | APObjectInvalid (KeyMap (NonEmpty err))
     deriving (Eq, Show)
 
 -- | First @"properties"@ and @"patternProperties"@ are run simultaneously
@@ -74,10 +75,10 @@ propertiesRelatedVal
     :: forall err schema.
        (schema -> Value -> [err])
     -> PropertiesRelated schema
-    -> JM.KeyMap Value
+    -> KeyMap Value
     -> Maybe (PropertiesRelatedInvalid err)
 propertiesRelatedVal f props x
-    |  all null (JM.elems propFailures)
+    |  all null (KeyMap.elems propFailures)
     && all null (HM.elems patFailures)
     && isNothing addFailures = Nothing
     | otherwise =
@@ -87,15 +88,15 @@ propertiesRelatedVal f props x
             , _prInvalidAdditional = addFailures
             }
   where
-    propertiesHm :: JM.KeyMap schema
+    propertiesHm :: KeyMap schema
     propertiesHm = fromMaybe mempty (_propProperties props)
 
-    patHm :: JM.KeyMap schema
+    patHm :: KeyMap schema
     patHm = fromMaybe mempty (_propPattern props)
 
-    propAndUnmatched :: (JM.KeyMap [err], Remaining)
-    propAndUnmatched = ( JM.intersectionWith f propertiesHm x
-                       , Remaining (JM.difference x propertiesHm)
+    propAndUnmatched :: (KeyMap [err], Remaining)
+    propAndUnmatched = ( KeyMap.intersectionWith f propertiesHm x
+                       , Remaining (KeyMap.difference x propertiesHm)
                        )
 
     (propFailures, propRemaining) = propAndUnmatched
@@ -106,7 +107,7 @@ propertiesRelatedVal f props x
     (patFailures, patRemaining) = patAndUnmatched
 
     finalRemaining :: Remaining
-    finalRemaining = Remaining (JM.intersection (_unRemaining patRemaining)
+    finalRemaining = Remaining (KeyMap.intersection (_unRemaining patRemaining)
                                                 (_unRemaining propRemaining))
 
     addFailures :: Maybe (APInvalid err)
@@ -115,50 +116,50 @@ propertiesRelatedVal f props x
 
 -- | Internal.
 newtype Remaining
-    = Remaining { _unRemaining :: JM.KeyMap Value }
+    = Remaining { _unRemaining :: KeyMap Value }
 
 -- | Internal.
 patternAndUnmatched
     :: forall err schema.
        (schema -> Value -> [err])
-    -> JM.KeyMap schema
-    -> JM.KeyMap Value
+    -> KeyMap schema
+    -> KeyMap Value
     -> (HashMap (Regex, JP.Key) [err], Remaining)
 patternAndUnmatched f patPropertiesHm x =
-    (JM.foldlWithKey' runMatches mempty perhapsMatches, remaining)
+    (foldlWithKey' runMatches mempty perhapsMatches, remaining)
   where
     -- @[(Regex, schema)]@ will have one item per match.
-    perhapsMatches :: JM.KeyMap ([(Regex, schema)], Value)
+    perhapsMatches :: KeyMap ([(Regex, schema)], Value)
     perhapsMatches =
-        JM.foldlWithKey' (matchingSchemas patPropertiesHm) mempty x
+        foldlWithKey' (matchingSchemas patPropertiesHm) mempty x
       where
         matchingSchemas
-            :: JM.KeyMap schema
-            -> JM.KeyMap ([(Regex, schema)], Value)
-            -> J.Key
+            :: KeyMap schema
+            -> KeyMap ([(Regex, schema)], Value)
+            -> Key
             -> Value
-            -> JM.KeyMap ([(Regex, schema)], Value)
+            -> KeyMap ([(Regex, schema)], Value)
         matchingSchemas subSchemas acc k v =
-            JM.insert k
-                      (JM.foldlWithKey' (checkKey k) mempty subSchemas, v)
+            KeyMap.insert k
+                      (foldlWithKey' (checkKey k) mempty subSchemas, v)
                       acc
 
         checkKey
-            :: J.Key
+            :: Key
             -> [(Regex, schema)]
-            -> J.Key
+            -> Key
             -> schema
             -> [(Regex, schema)]
         checkKey k acc r subSchema =
-            case RE.compileM (encodeUtf8 (J.keyToText r)) mempty of
+            case RE.compileM (encodeUtf8 (toText r)) mempty of
                 Left _   -> acc
-                Right re -> if (J.keyToText k) RE.=~ re
-                                then (Regex (J.keyToText r), subSchema) : acc
+                Right re -> if (toText k) RE.=~ re
+                                then (Regex (toText r), subSchema) : acc
                                 else acc
 
     runMatches
         :: HashMap (Regex, JP.Key) [err]
-        -> J.Key
+        -> Key
         -> ([(Regex, schema)], Value)
         -> HashMap (Regex, JP.Key) [err]
     runMatches acc k (matches,v) =
@@ -168,10 +169,10 @@ patternAndUnmatched f patPropertiesHm x =
             :: (Regex, schema)
             -> HashMap (Regex, JP.Key) [err]
             -> HashMap (Regex, JP.Key) [err]
-        runMatch (r,schema) = HM.insert (r, JP.Key (J.keyToText k)) (f schema v)
+        runMatch (r,schema) = HM.insert (r, JP.Key (toText k)) (f schema v)
 
     remaining :: Remaining
-    remaining = Remaining . fmap snd . JM.filter (null . fst) $ perhapsMatches
+    remaining = Remaining . fmap snd . KeyMap.filter (null . fst) $ perhapsMatches
 
 -- Internal.
 additionalProperties
@@ -191,10 +192,10 @@ additionalProperties f a x =
 additionalPropertiesBool
     :: Bool
     -> Remaining
-    -> Maybe (JM.KeyMap Value)
+    -> Maybe (KeyMap Value)
 additionalPropertiesBool True _ = Nothing
 additionalPropertiesBool False (Remaining x)
-    | JM.size x > 0 = Just x
+    | KeyMap.size x > 0 = Just x
     | otherwise     = Nothing
 
 -- | Internal.
@@ -203,9 +204,12 @@ additionalPropertiesObject
        (schema -> Value -> [err])
     -> schema
     -> Remaining
-    -> Maybe (JM.KeyMap (NonEmpty err))
+    -> Maybe (KeyMap (NonEmpty err))
 additionalPropertiesObject f schema (Remaining x) =
-    let errs = JM.mapMaybe (NE.nonEmpty . f schema) x
-    in if JM.null errs
+    let errs = KeyMap.mapMaybe (NE.nonEmpty . f schema) x
+    in if KeyMap.null errs
         then Nothing
         else Just errs
+
+foldlWithKey' :: (a -> Key -> b -> a) -> a -> KeyMap b -> a
+foldlWithKey' f a = Map.foldlWithKey' f a . KeyMap.toMap

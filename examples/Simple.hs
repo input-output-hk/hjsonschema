@@ -5,7 +5,6 @@ import           Protolude
 import           Data.Aeson (Value(..), decodeStrict, toJSON)
 import qualified Data.ByteString as BS
 import qualified Data.List.NonEmpty as NE
-import           Data.Maybe (fromMaybe)
 
 import qualified JSONSchema.Draft4 as D4
 

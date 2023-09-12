@@ -2,17 +2,11 @@ module JSONSchema.Validator.Draft4.Any where
 
 import           Import hiding ((<>))
 
-import           Data.Aeson.TH (constructorTagModifier)
-import           Data.Char (toLower)
-import qualified HaskellWorks.Data.Aeson.Compat as J
-import qualified HaskellWorks.Data.Aeson.Compat.Map as JM
-import           Data.List.NonEmpty (NonEmpty((:|)))
+import qualified Data.Aeson.KeyMap as KeyMap
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Scientific as SCI
 import           Data.Semigroup
-import           Data.Set (Set)
 import qualified Data.Set as Set
-import           Data.Text.Encoding.Error (UnicodeException)
 import qualified JSONPointer as JP
 import           Network.HTTP.Types.URI (urlDecode)
 
@@ -185,14 +179,14 @@ newBaseURIFromFragment
 newBaseURIFromFragment updateScope baseURI v =
   case v of
     Object hm -> do
-      let hmWithOnlyId = case JM.lookup idKey hm of
+      let hmWithOnlyId = case KeyMap.lookup idKey hm of
                            Nothing    -> mempty
-                           Just idVal -> JM.singleton idKey idVal
+                           Just idVal -> KeyMap.singleton idKey idVal
       schema <- first SubschemaDecodingError (fromJSONEither (Object hmWithOnlyId))
       Right (updateScope baseURI schema)
     _ -> Right baseURI
   where
-    idKey :: J.Key
+    idKey :: Key
     idKey = "id"
 
 --------------------------------------------------

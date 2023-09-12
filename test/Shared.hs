@@ -4,10 +4,8 @@ import           Protolude
 
 import           Control.Monad (fail)
 import           Data.Aeson
-import           Data.Aeson.TH (fieldLabelModifier)
 import qualified Data.ByteString as BS
-import           Data.Char (toLower)
-import           Data.List (stripPrefix, unlines)
+import           Data.List (stripPrefix)
 import qualified Data.List as L
 import qualified Data.Text as T
 import qualified System.Directory as SD

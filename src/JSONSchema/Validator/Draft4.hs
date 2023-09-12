@@ -7,10 +7,12 @@ module JSONSchema.Validator.Draft4
     , module Export
     ) where
 
+import           Data.Aeson.KeyMap (KeyMap)
+import qualified Data.Aeson.KeyMap as KeyMap
+
 import           Import
 
 import qualified Data.List.NonEmpty as NE
-import qualified HaskellWorks.Data.Aeson.Compat.Map as JM
 
 import           JSONSchema.Validator.Draft4.Any as Export
 import           JSONSchema.Validator.Draft4.Array as Export
@@ -126,7 +128,7 @@ dependenciesValidator f =
     Validator
         (maybe mempty ( (\a -> (mempty, a))
                       . catMaybes . fmap checkDependency
-                      . JM.elems . _unDependenciesValidator
+                      . KeyMap.elems . _unDependenciesValidator
                       ))
         (run (dependenciesVal f))
   where
@@ -143,8 +145,8 @@ propertiesRelatedValidator
 propertiesRelatedValidator f =
     Validator
         (\a -> ( mempty
-               ,  JM.elems (fromMaybe mempty (_propProperties a))
-               <> JM.elems (fromMaybe mempty (_propPattern a))
+               ,  KeyMap.elems (fromMaybe mempty (_propProperties a))
+               <> KeyMap.elems (fromMaybe mempty (_propPattern a))
                <> case _propAdditional a of
                       Just (AdditionalPropertiesObject b) -> [b]
                       _                                   -> mempty
@@ -154,7 +156,7 @@ propertiesRelatedValidator f =
                      Right c -> maybeToList (propertiesRelatedVal f a c))
 
 newtype Definitions schema
-    = Definitions { _unDefinitions :: JM.KeyMap schema }
+    = Definitions { _unDefinitions :: KeyMap schema }
     deriving (Eq, Show)
 
 instance FromJSON schema => FromJSON (Definitions schema) where
@@ -169,7 +171,7 @@ definitionsEmbedded
 definitionsEmbedded =
     Validator
         (\a -> case a of
-                 Just (Definitions b) -> (mempty, JM.elems b)
+                 Just (Definitions b) -> (mempty, KeyMap.elems b)
                  Nothing              -> (mempty, mempty))
         (const (const mempty))
 
